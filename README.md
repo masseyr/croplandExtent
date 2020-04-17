@@ -1,6 +1,6 @@
 # GFSAD30 Cropland extent
 
-[![DOI](GFSAD30NACE/images/zenodo.3740462.svg)](https://doi.org/10.5067/MEaSUREs/GFSAD/GFSAD30NACE.001)
+[![DOI](GFSAD30NACE/images/doi.badge.svg)](https://doi.org/10.5067/MEaSUREs/GFSAD/GFSAD30NACE.001)
 
 Google Earth Engine Codes for development of Cropland extent for North America 2010
 
