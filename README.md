@@ -14,4 +14,4 @@ Product documentation is available at:
 
 The associated paper can be viewed at: https://www.sciencedirect.com/science/article/abs/pii/S0034425718304619
 
-![](GFSAD30NACE/images/GFSAD30_GCE2010_z1.JPG)
+[![CROPLANDS](GFSAD30NACE/images/GFSAD30_GCE2010_z1.JPG)](https://croplands.org)
