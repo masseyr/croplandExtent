@@ -1,0 +1,117 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var image = ee.Image("users/images/Belize_2010_v4"),
+    image2 = ee.Image("users/images/Costa_Rica_2010_v7"),
+    image3 = ee.Image("users/images/DR_2010_v6"),
+    image4 = ee.Image("users/images/EL_Salvador_2010_v1"),
+    image5 = ee.Image("users/images/Guatemala_2010_v6"),
+    image6 = ee.Image("users/images/Haiti_2010_v5"),
+    image8 = ee.Image("users/images/Panama_2010_v5"),
+    studyArea = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-87.62695178389549, 8.868789561414673],
+          [-83.23242053389549, 6.429942184960368],
+          [-78.83788928389549, 6.3425969648362726],
+          [-75.41015490889549, 8.608178607442493],
+          [-77.95898303389549, 10.428390862637604],
+          [-81.65038928389549, 13.864747046142286],
+          [-83.84765490889549, 16.99900869321349],
+          [-88.24218615889549, 19.668452974374233],
+          [-92.37304553389549, 18.004855857908034],
+          [-93.60351428389549, 14.12059465815668]]]),
+    image9 = ee.Image("users/images/Honduras_2010_v7"),
+    image7 = ee.Image("users/images/Nicaragua_2010_v5"),
+    correction = /* color: #d63000 */ee.Geometry.MultiPolygon(
+        [[[[-77.46803880615658, 7.743045996346482],
+           [-77.43988037109375, 7.853938428694212],
+           [-77.30186462402344, 8.501653966424175],
+           [-77.37190246582031, 8.511161253645104],
+           [-77.43301391601562, 8.166713133293706],
+           [-77.4920654296875, 7.876384570916088],
+           [-77.51129150390625, 7.7137927985702195]]],
+         [[[-78.72905731201172, 9.216021953825464],
+           [-78.70914459228516, 9.23940465649391],
+           [-78.68888854980469, 9.25939733075549],
+           [-78.67481231689453, 9.336646446355456],
+           [-78.66485595703125, 9.43250638887189],
+           [-78.7002182006836, 9.442327992286053],
+           [-78.73455047607422, 9.337662768272724],
+           [-78.73214721679688, 9.28785951439998],
+           [-78.74141693115234, 9.230593965067376]]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+
+//var image8=image8.clip(studyArea)
+var mosaic_out=ee.ImageCollection([image,image2,image3,image4,image5,image6,image7,image8,image9]).mosaic()
+
+mosaic_out=mosaic_out.updateMask(mosaic_out.eq(1))
+
+function clean_output_noise_in(image00,studyarea,px,nc){
+  image00=image00.unmask().focal_max({kernel: ee.Kernel.circle({
+    radius: ee.Number(px),units:'meters'}),iterations: 1})
+  function invert_image(in_img,studyarea){
+    in_img=in_img.clip(studyarea).subtract(1).abs()
+    return in_img.updateMask(in_img.eq(1))
+  }
+  function make_binary_gt(in_img,studyarea,thresh){
+    in_img=ee.Image(in_img.unmask()).clip(studyarea)
+    var image01=in_img.updateMask(in_img.gt(ee.Number(thresh)
+                .subtract(1))).multiply(0).add(1)
+    image01=ee.Image(image01.unmask()).clip(studyarea)
+    var image02=in_img.multiply(0)
+    var out_img=in_img.multiply(image02).add(image01)
+    return out_img.updateMask(out_img.eq(1))
+  }
+  image00=ee.Image(invert_image(image00,studyarea)).byte()
+  var temp_img=image00.connectedPixelCount(ee.Number(nc), true)
+  temp_img=make_binary_gt(temp_img,studyarea,ee.Number(nc))
+  return ee.Image(invert_image(temp_img.unmask(),studyarea))
+  
+}
+function clean_output_noise(image){
+  image=image.clip(studyArea)
+  function make_binary_gt(in_img,thresh){
+    in_img=in_img.unmask()
+    var image1=in_img.updateMask(in_img.gt(ee.Number(thresh).subtract(1))).multiply(0).add(1)
+    image1=image1.unmask()
+    var image2=in_img.multiply(0)
+    var out_img=in_img.multiply(image2).add(image1)
+    return out_img.updateMask(out_img.eq(1))
+  }
+  var kernel = ee.Kernel.square({radius: 45,units:'meters'});
+  var temp_img=image
+  //.unmask().focal_mode({kernel: kernel, iterations: 1})
+  //classified2=classified2.updateMask(classified2.eq(1))
+              //.focal_max({kernel: kernel, iterations: 2});
+  temp_img=temp_img.connectedPixelCount(100, true)
+  return make_binary_gt(temp_img,9)
+}
+//var final=clean_output_noise(mosaic_out).byte().reproject('EPSG:3857',null,30)
+var final=mosaic_out//clean_output_noise_in(clean_output_noise(mosaic_out),studyArea,1,4).byte().reproject('EPSG:3857',null,30)
+
+function applyMask(intgeom,inputgeom){
+  var maskGeom=inputgeom.difference(intgeom)
+  return maskGeom}
+
+//final=final.clip(applyMask(correction,studyArea))//.updateMask(ee.Image(invert_image10(corr)).eq(1))
+
+
+Map.addLayer(final, {palette:'00ff00'},'final')
+
+Export.image.toAsset({
+  image: final,
+  scale: 30,
+  maxPixels:9990000000000,
+  description: 'Cen_America_final_v2_asset',
+  assetId: 'Cen_America_final_2010_v2',
+  region: studyArea, 
+});
+
+Export.image.toDrive({
+  image: final,
+  scale: 30,
+  maxPixels:9990000000000,
+  folder: 'Central_america_out1',
+  description: 'Cen_America_v1_drive',
+  fileNamePrefix: 'Cen_America_final_2010_v1',
+  region: studyArea, 
+  crs:'EPSG:4326'
+});
+

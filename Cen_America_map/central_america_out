@@ -1,0 +1,10 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var caribbean = ee.Image("users/images/Caribbean_final_2010_v1"),
+    hawaii = ee.Image("users/images/Hawaii_final_2010_v1"),
+    iceland = ee.Image("users/images/Iceland_final_2010_v1"),
+    mexico = ee.Image("users/images/Mexico_final_2010_v1"),
+    centralAmerica = ee.Image("users/images/Cen_America_final_2010_v1");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var mosaic_out=ee.ImageCollection([caribbean,hawaii,iceland,mexico,centralAmerica]).mosaic()
+Map.addLayer(mosaic_out, {palette:'00ff00'},'cropland')
+

@@ -1,0 +1,81 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var image = ee.Image("users/images/Alaska_2014_v1"),
+    image2 = ee.Image("users/images/CanPrairies_2014_v1"),
+    image3 = ee.Image("users/images/ECrescent_2014_v1"),
+    image4 = ee.Image("users/images/ERim_2014_v1"),
+    image5 = ee.Image("users/images/ESeaBoard_2014_v1"),
+    image6 = ee.Image("users/images/EUplands_2014_v1"),
+    image7 = ee.Image("users/images/MidSeaBoard_2014_v1"),
+    image8 = ee.Image("users/images/MidEasternForest_2014_v1"),
+    image9 = ee.Image("users/images/MidCrescent_2014_v1"),
+    image10 = ee.Image("users/images/MidUplands_2014_v1"),
+    image11 = ee.Image("users/images/Mississippi_2014_v1"),
+    image12 = ee.Image("users/images/NBasinRange_2014_v1"),
+    image13 = ee.Image("users/images/NGreatPlains_2014_v1"),
+    image14 = ee.Image("users/images/NPrairies_2014_v1"),
+    image15 = ee.Image("users/images/NWForest_2014_v1"),
+    image16 = ee.Image("users/images/NWRim_2014_v1"),
+    image17 = ee.Image("users/images/NovaScotia_2014_v1"),
+    image18 = ee.Image("users/images/SBasinRange_2014_v1"),
+    image19 = ee.Image("users/images/SERim_2014_v1"),
+    image20 = ee.Image("users/images/SGreatPlains_2014_v1"),
+    image21 = ee.Image("users/images/SPrairies_2014_v1"),
+    image22 = ee.Image("users/images/SRim_2014_v1"),
+    image23 = ee.Image("users/images/SWRim_2014_v1"),
+    image24 = ee.Image("users/images/Veracruz_2014_v3"),
+    image25 = ee.Image("users/images/WBasinRange_2014_v1"),
+    image26 = ee.Image("users/images/WCrescent_2014_v1"),
+    image27 = ee.Image("users/images/WRim_2014_v1"),
+    image28 = ee.Image("users/images/Yukon_2014_v1"),
+    image29 = ee.Image("users/images/Heartland_2014_v1"),
+    prev = ee.Image("users/images/NorthAmerica_final_2010output_mosaic"),
+    studyArea = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-171.9140625, 62.422601941807294],
+          [-172.6171875, 17.291212518727974],
+          [-84.0234375, 3.1441798489129504],
+          [-51.328125, 9.777640548665449],
+          [-44.296875, 53.31994092295351],
+          [-105.46875, 64.91578314238748],
+          [-169.453125, 63.85197089603142]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var final=ee.ImageCollection([image,image2,image3,image4,image5,image6,image7,image8,image9
+,image10,image11,image12,image13,image14,image15,image16,image17,image18,image19,image20
+,image21,image22,image23,image24,image25,image26,image27,image28,image29]).mosaic()
+
+//Map.addLayer(final,{palette:'00ff00'})
+
+
+
+var mosaic_2014=final.unmask().int16()
+var mosaic_2010=prev.unmask().int16()
+
+//Map.addLayer(mosaic_2010,{palette:'0000ff,00ff00'},'map_2010')
+//Map.addLayer(mosaic_2014,{palette:'0000ff,ffff00'},'map_2014')
+
+var out_img=mosaic_2010.subtract(mosaic_2014).add(1).byte()
+.updateMask(mosaic_2010.eq(1).or(mosaic_2014.eq(1)))
+
+function applyMask(featureCollection,studyArea,inputImage){
+  var maskImage=ee.Image(1).byte().clip(featureCollection)
+  .unmask().subtract(1).abs()
+  return inputImage.updateMask(maskImage.eq(1))
+}
+
+//out_img=applyMask(cut1,canada,out_img)
+
+Map.addLayer(out_img, {min:0,max:2,palette:'00ff00,ffff00,ff0000'})
+
+Export.image.toAsset({
+  image: out_img,
+  scale: 30,
+  maxPixels:1e13,
+  description: 'NA_2010_2014_change_v1_asset',
+  assetId: 'NA_2010_2014_change_v1_asset',
+  region: studyArea, 
+});
+
+//out_img=out_img.gt(0)
+
+//Map.addLayer(out_img,{palette:'00ff00'},'out_img')
+
+
